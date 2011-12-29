@@ -1,0 +1,230 @@
+* Why not slides?
+
+The primary goal of many of the talks I've given is to duplicate a
+mental structure from my mind into the minds of my listeners so that
+they can understand it well enough to make their own judgments and
+possibly make use of the ideas.  Or perhaps this is secondary to the
+goal of getting out of paying to attend the conference, but how better
+to continue doing that than to consistently help the audience to
+learn?
+
+Often these mental structures are represented in my mind by visual or
+spatial relationships. In these cases my slide-based presentations
+tended to incorporate lots of diagrams so that my audience could see
+roughly how the ideas look to me. Often diagrams on different slides
+would duplicate substantial amounts of information from previously
+seen diagrams, in order to represent various things such as changes
+over time, added detail, or how a previous diagram fit into a more
+comprehensive idea.
+
+But although there were real relationships between the diagrams on
+different slides, I felt slide-based presentation tools used effects
+in a way that obscured these relationships.  For example, slides often
+move off to the left to reveal the next slide, suggesting to the
+audience that the previous diagram somehow belongs over there.  Other
+effects such as fades, sliding vertically, flipping over, etc. are
+rarely any more helpful.
+
+TractionSVG is my humble attempt to build something that allows me to
+illuminate rather than obscure these relationships. I can use it to
+show an audience an undetailed diagram, then zoom in to different
+parts and show more detail. Rather than duplicating parts of diagrams,
+I can add or change visual elements of a single diagram and therefore
+hopefully introduce less mental discontinuity in audience members.
+
+* Using a presentation
+
+Just point a supported browser at the presentation `.svg` file, and
+you should see the first step of the presentation.  Speaker's notes
+will pop up in a separate window, so you may need to disable your
+popup blocker if you want to see them.
+
+To advance to the next step, do any of:
+- Press space
+- Press the right arrow
+- Click on the right-hand half of the presentation window
+- Click on the header for the next step in the speaker's notes window
+  
+To zoom to the previous step, do any of:
+- Press the left arrow
+- Click on the left-hand half of the presentation window
+- Click on the header for the previous step in the speaker's notes
+  window
+  
+You can also jump to any arbitrary step by clicking its header in the
+speaker's notes window.
+
+In Chrome on Linux you can press F11 to enter fullscreen mode.  This
+is perfect for showing on a projector while keeping the speaker's
+notes on your laptop screen.
+
+** Supported browsers
+   
+TractionSVG has been tested most thoroughly on Chrome and Safari for
+iPhone, but has been reported to work on Safari and Firefox as well.
+
+* How it works
+
+The browser loads the `.svg` file which contains a link to (or a copy
+of) the `traction.js` JavaScript file.  This JavaScript finds the
+presentation config, either from inside the `.svg` or in a separate
+config file.  It uses instructions in this config to adjust the SVG DOM
+in various minor ways, opens a speaker's notes window, and begins
+playing the presentation.
+
+** Parts of a presentation
+*** The `.svg` file
+    
+The presentation's `.svg` file may contain everything required for the
+presentation, including images, the config and the contents of
+`traction.js`. Used this way, an entire presentation can be single
+file called an "uber-traction", usable directly from any supported
+browser. The file may minimally contain however just a link to
+`traction.js` and the SVG elements to be displayed.
+
+A presentation's config will refer to the XML `id` attributes of
+elements in the `.svg` file. Also, every SVG `rect` element whose XML
+`id` begins with `view-` will be hidden immediately when the browser
+loads the presentation.  These view rects will be used to control
+pre-set areas the browser's view can be zoomed to.
+
+*** The config
+    
+The config for a presentation is an XML fragment that may be put
+either inside the `.svg` file, which allows for building an
+uber-traction, or in separate file named `config.xml`.
+
+The separate `config.xml` file must be in the same directory as the
+`.svg` file [note: the specifics of how the `config.xml` file is found
+are likely to change]. This is ideal for presentation development as
+it allows you to make and save changes to the `config.xml` and `.svg`
+files from different tools (such as a text editor and inkscape,
+respectively) at the same time. However, some browsers will not allow
+SVG at a `file:` URL to load the separate `config.xml` file, so you
+may need to run a local web server to make both the `.svg` and
+`config.xml` available to the browser during development.
+
+If a `config.xml` file is found, it takes precedence over any config
+element that may be included in the `.svg`.
+
+*** The `traction.js` file
+    
+The JavaScript is of course the heart of the TractionSVG system, but
+should not require any customization from one presentation to another.
+It is generated by the ClojureScript compiler from sources in this
+repo's `src` directory, but the resulting `tranction.js` is also
+checked in for convenient use without having to install or use the
+ClojureScript compiler.  A presentation's `.svg` file simply needs to
+refer to, or have a copy of, the `traction.js` file.
+
+* Creating a presentation
+
+The recommended way to create a presentation is to use an SVG editor
+such as inkscape, an XML editor (vim or emacs works well), a lighttpd,
+and a supported web browser. Note that only a browser is needed for
+viewing a completed presentation.
+
+Let's say you want to create a presentation named 'mypres'.  Start in
+the directory that contains this README.  Then:
+
+```
+$ cp -a example ~/mypres
+$ cd ~/mypres
+$ mv example.svg mypres.svg
+$ lighttpd -D -f lighttpd.conf
+```
+
+Now point your web browser to `http://localhost:8080/mypres.svg` and
+you should see a friendly welcome message.  Edit the `config.xml` and
+`mypres.svg` files at will, and reload the page in the browser to see
+your changes.
+
+** About the example
+
+SVG elements that are very small may not be rendered at all in some
+browsers, even when you zoom in. To compensate for this, the body of
+the graphic is very large -- much larger than a 8.5x11 page.
+
+View rectangles are in a separate inkscape layer, which makes them
+easy to hide interactively. They are also colored green to help them
+stand out from the background. TractionSVG ignores all this however,
+and only pays attention to the XML element ids. View rectangles are
+simply `rect` elements whose ids start with "view-".
+
+* Building an uber-traction for sharing your presentation
+
+You can share your presentation directory if you'd like, which might
+work especially well if you host it on a web site somewhere.  However,
+if you'd like to be able to email your presentation or otherwise send
+it around without a properly configured web server involved, it may be
+best to pull all of your files into a single uber-traction
+presentation file.
+
+Currently this is a manual process, so you'll need to open your `.svg`
+file in an XML or text editor.  It's a good idea to close your SVG
+editor before doing this so you don't accidentally have it overwrite
+textual changes you'll be making to the `.svg` file.
+
+** Moving config into the `.svg`
+
+Simply paste the contents of your `config.xml` file into your `.svg`
+file.  Immediately inside the opening `<svg>` tag is a file place to
+put it.  Note that if TractionSVG can find a `config.xml` in the same
+directory as your `.svg` file, that will take precedence over what you
+just pasted, so you may want to build your uber-traction file in a new
+file in a separate directory or something.
+
+Your `.svg` may now look something like this:
+```
+<svg ...>
+  <steps xmlns="http://chouser.n01se.net/traction/config">
+    <init>...</init>
+    <step>...</step>
+    ...
+  </steps>
+  <script xlink:href="traction-0.0.1.js" type="text/ecmascript">
+  <defs>...</defs>
+  ...
+</svg>
+```
+
+It may look different later if you load the `.svg` file in inkscape
+and save it back out.  Inkspace may adjust where XML namespaces are
+declared and such, but this shouldn't cause any problems for TractionSVG.
+   
+** Moving `.js` into the `.svg`
+
+The snippet above shows the script tag that is used to load
+the TractionSVG JavaScript.  To include the contents of the JavaScript
+instead of just having a reference to it, replace that script tag with
+one like this:
+
+```
+  <script type="text/ecmascript"><![CDATA[
+    ...
+  ]]>
+  </script>
+```
+
+Then replace `...` with the contents of the `traction.js` file.
+
+* Possible improvements
+
+Here are some ideas to inspire you in your quest to find improvements
+you could contribute:
+
+- Add a way to link from the `.svg` to a specific config file (rather
+  than always using `config.xml` in the same directory)
+- Add view transforms besides zoom, such as rotate.
+- Add animation attributes besides opacity, such as position,
+  rotation, etc.
+- Provide a speakers-notes view within page (instead of only as popup)
+  for more pleasant viewing by individuals later.
+- Add in-browser presentation editor (start small -- allow fixing of
+  typos, then config tweaks, eventually allow editing of SVG and all
+  supported features)
+- Include an easy-to-start web server to support development (serving
+  of config file, and eventually saving of changes made in the
+  in-browser presentation editor)
+
+--Chouser, Dec 2011

@@ -1,0 +1,24 @@
+<steps xmlns="http://chouser.n01se.net/traction/config">
+  <init>
+    <set duration="1000" />
+    <set i="welcome" opacity="0" />
+    <set i="dev-detail" opacity="0" />
+    <set i="share-detail" opacity="0" />
+  </init>
+  <step view="view-begin">
+    <set i="welcome" opacity="1" once="true"/>
+    <ul xmlns="http://www.w3.org/1999/xhtml">
+      <li>A friendly welcome message</li>
+    </ul>
+  </step>
+  <step view="view-dev">
+    <set i="dev-detail" opacity="1" />
+    <ul xmlns="http://www.w3.org/1999/xhtml">
+      <li>More speaker's notes here.</li>
+    </ul>
+  </step>
+  <step view="view-share">
+    <set i="share-detail" opacity="1" />
+  </step>
+  <step view="view-final"></step>
+</steps>
