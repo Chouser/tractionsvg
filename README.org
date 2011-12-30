@@ -132,12 +132,10 @@ viewing a completed presentation.
 Let's say you want to create a presentation named 'mypres'.  Start in
 the directory that contains this README.  Then:
 
-```
-$ cp -a example ~/mypres
-$ cd ~/mypres
-$ mv example.svg mypres.svg
-$ lighttpd -D -f lighttpd.conf
-```
+    $ cp -a example ~/mypres
+    $ cd ~/mypres
+    $ mv example.svg mypres.svg
+    $ lighttpd -D -f lighttpd.conf
 
 Now point your web browser to `http://localhost:8080/mypres.svg` and
 you should see a friendly welcome message.  Edit the `config.xml` and
@@ -180,18 +178,17 @@ just pasted, so you may want to build your uber-traction file in a new
 file in a separate directory or something.
 
 Your `.svg` may now look something like this:
-```
-<svg ...>
-  <steps xmlns="http://chouser.n01se.net/traction/config">
-    <init>...</init>
-    <step>...</step>
-    ...
-  </steps>
-  <script xlink:href="traction-0.0.1.js" type="text/ecmascript">
-  <defs>...</defs>
-  ...
-</svg>
-```
+
+    <svg ...>
+      <steps xmlns="http://chouser.n01se.net/traction/config">
+        <init>...</init>
+        <step>...</step>
+        ...
+      </steps>
+      <script xlink:href="traction-0.0.1.js" type="text/ecmascript">
+      <defs>...</defs>
+      ...
+    </svg>
 
 It may look different later if you load the `.svg` file in inkscape
 and save it back out.  Inkspace may adjust where XML namespaces are
@@ -204,12 +201,10 @@ the TractionSVG JavaScript.  To include the contents of the JavaScript
 instead of just having a reference to it, replace that script tag with
 one like this:
 
-```
-  <script type="text/ecmascript"><![CDATA[
-    ...
-  ]]>
-  </script>
-```
+    <script type="text/ecmascript"><![CDATA[
+      ...
+    ]]>
+    </script>
 
 Then replace `...` with the contents of the `traction.js` file.
 
