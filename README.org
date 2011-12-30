@@ -227,4 +227,4 @@ you could contribute:
   of config file, and eventually saving of changes made in the
   in-browser presentation editor)
 
---Chouser, Dec 2011
+ --Chouser, Dec 2011
