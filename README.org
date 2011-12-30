@@ -32,6 +32,11 @@ parts and show more detail. Rather than duplicating parts of diagrams,
 I can add or change visual elements of a single diagram and therefore
 hopefully introduce less mental discontinuity in audience members.
 
+You can take a look at how I used it at Clojure/conj 2011 here:
+http://chouser.github.com/conj-2011-cljs.svg
+
+—Chouser, Dec 2011
+
 * Using a presentation
 
 Just point a supported browser at the presentation `.svg` file, and
@@ -226,5 +231,3 @@ you could contribute:
 - Include an easy-to-start web server to support development (serving
   of config file, and eventually saving of changes made in the
   in-browser presentation editor)
-
- --Chouser, Dec 2011
