@@ -1,0 +1,16 @@
+{:paths ["src"]
+ :aliases
+ {:dev      {:extra-deps  {com.bhauman/figwheel-main {:mvn/version "0.2.18"}
+                           org.slf4j/slf4j-nop       {:mvn/version "2.0.6"}
+                           devcards/devcards         {:mvn/version "0.2.7"}}
+             :extra-paths ["env/dev" "test" "target"]
+             :main-opts
+             ["-m" "cljs.main" "--compile" "traction" "--repl"]}
+  :prod {:main-opts
+         ["-m" "cljs.main" "--optimizations" "advanced" "--compile" "traction.traction"]}
+  :outdated {:replace-deps {olical/depot        {:mvn/version "2.3.0"}
+                            org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}
+             :main-opts
+             ["-m" "depot.outdated.main"]}}
+ :deps  {org.clojure/clojure       {:mvn/version "1.11.1"}
+         org.clojure/clojurescript {:mvn/version "1.11.60"}}}

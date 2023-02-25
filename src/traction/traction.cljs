@@ -1,6 +1,6 @@
 ; traction -- presentations without slides
 ; Copyright 2011 (c) Chris Houser. All rights reserved.
-; 
+;
 ; This program is free software: you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation, either version 3 of the License, or
@@ -11,36 +11,38 @@
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
 
-(ns traction
-  (:require [goog.net.XhrIo :as xhrio]
-            [goog.dom :as dom]
+(ns traction.traction
+  (:import (goog.events KeyHandler)
+           (goog.net XhrIo))
+  (:require [goog.dom :as dom]
             [goog.style :as style]
             [goog.window :as gwin]
-            [goog.fx.Animation :as Animation]
+            [goog.fx]
+            [goog.fx.anim :as anim]
             [goog.events :as events]
-            [goog.events.KeyHandler :as KeyHandler]))
+            [goog.events.Keys :as k]))
 
-(def svg (.documentElement js/document))
+(def svg js/document.documentElement)
 
 (defn parameterize [start end]
   (let [diff (- end start)]
     (fn [t] (+ start (* t diff)))))
 
 (defn svg-point [x y]
-  (let [point (. svg (createSVGPoint))]
-    (set! (.x point) x)
-    (set! (.y point) y)
+  (let [point (.createSVGPoint svg)]
+    (set! (.-x point) x)
+    (set! (.-y point) y)
     point))
 
 (defn client-rect [elem]
-  (let [bbox (. elem (getBBox))
-        ctm (. elem (getCTM))
-        tl (.matrixTransform (svg-point (.x bbox) (.y bbox)) ctm)
-        br (.matrixTransform (svg-point (+ (.x bbox) (.width bbox))
-                                        (+ (.y bbox) (.height bbox)))
+  (let [bbox (.getBBox elem)
+        ctm (.getCTM elem)
+        tl (.matrixTransform (svg-point (.-x bbox) (.-y bbox)) ctm)
+        br (.matrixTransform (svg-point (+ (.-x bbox) (.-width bbox))
+                                        (+ (.-y bbox) (.-height bbox)))
                              ctm)]
-    {:x (.x tl) :y (.y tl)
-     :width (- (.x br) (.x tl)) :height (- (.y br) (.y tl))}))
+    {:x (.-x tl) :y (.-y tl)
+     :width (- (.-x br) (.-x tl)) :height (- (.-y br) (.-y tl))}))
 
 (defn tags [elem tag-name]
       ; (dom/$$ tag-name nil elem) ?
@@ -111,7 +113,7 @@
       :else
         (let [elem (dom/getElement k)]
           (when (:opacity v)
-            (set! (.opacity (.style elem)) (:opacity v)))))))
+            (set! (.-opacity (.-style elem)) (:opacity v)))))))
 
 (def notes-window (atom nil))
 
@@ -129,19 +131,20 @@
         target-world (nth @computed-steps i)]
     (when (not= current-world target-world)
       ; update main window
-      (set! (.hash (.location js/document)) (str \# (pr-str {'step i})))
+      (set! js/document.location.hash (str \# (pr-str {'step i})))
       (reset! transition
               (with-meta
                 (new-transition current-world target-world)
                 {:start (js/Date.) :duration (:duration target-world)}))
-      (Animation/registerAnimation transition)
+      (anim/registerAnimation transition)
 
       ; update notes window
-      (let [id (str "step" i)
-            notes-body (.body (.document @notes-window))
-            notes-dom (dom/getDomHelper notes-body)]
-        (set! (.scrollTop notes-body)
-          (style/getPageOffsetTop (.getElement notes-dom id)))))))
+      (when @notes-window
+        (let [id (str "step" i)
+              notes-body (.-body (.-document @notes-window))
+              notes-dom (dom/getDomHelper notes-body)]
+          (set! (.-scrollTop notes-body)
+                (style/getPageOffsetTop (.getElement notes-dom id))))))))
 
 (defn set-step [i]
   (alter-step (constantly i)))
@@ -155,7 +158,7 @@
                         width: ~{}, height: ~{},
                         scrollbars: true, resizable: true}"
                       gwin/DEFAULT_POPUP_WIDTH gwin/DEFAULT_POPUP_HEIGHT))
-        body (.body (.document win))
+        body (.-body (.-document win))
         notesdom (dom/getDomHelper body)]
     (reset! notes-window win)
     (dom/append body
@@ -170,56 +173,59 @@
         (dom/append body (.createDom notesdom "div" nil a)
                     (.cloneNode step true))))
     (events/listen
-      (events/KeyHandler. body true) KeyHandler/EventType.KEY
+      (KeyHandler. body true) (-> KeyHandler
+                                  (.-EventType)
+                                  (.-KEY))
       (fn [e]
-          (condp = (.keyCode e)
-            events/KeyCodes.SPACE (alter-step inc)
-            events/KeyCodes.RIGHT (alter-step inc)
-            events/KeyCodes.LEFT  (alter-step dec)
+          (condp = (.-key e)
+            k/SPACE (alter-step inc)
+            k/RIGHT (alter-step inc)
+            k/LEFT  (alter-step dec)
             nil)))
     (. win (focus))))
 
-(set! (.cycle transition)
-  (fn []
+(set! (.-onAnimationFrame transition)
+  (fn [t]
     (let [trans @transition
           {:keys [start duration]} (meta trans)
           t (min 1 (/ (- (js/Date.) start) (max duration 1)))]
       (reset! world (compute-animation trans t))
       (apply-world @world)
       (when (>= t 1)
-        (Animation/unregisterAnimation transition)))))
+        (anim/unregisterAnimation transition)))))
 
-(set! (.onload (js* "window"))
+(set! (.-onload (js* "window"))
   (fn []
-    (xhrio/send "config.xml"
+    ((.-send XhrIo) "config.xml"
       (fn [x]
         (try
-          (let [config (if-let [xml (. (.target x) (getResponseXml))]
-                         (.documentElement xml)
+          (let [config (if-let [xml (. (.-target x) (getResponseXml))]
+                         (.-documentElement xml)
                          (if-let [elems (.getElementsByTagName svg "steps")]
                             (aget elems 0)
                             (js/alert "No traction steps found")))]
             (reset! computed-steps (compute-steps config))
             (reset! world (nth @computed-steps 0))
             (apply-world @world)
-            (open-notes config))
+            #_(open-notes config))
           (catch js/Error e
-            (js/alert (str e \newline (.stack e)))))))
+            (js/alert (str e \newline (.-stack e)))))))
 
     ; Hide view boxes
     (doseq [rect (prim-seq (.getElementsByTagName svg "rect") 0)]
-      (when (re-find #"^view-" (.id rect))
-        (set! (-> rect .style .visibility) "hidden")))
+      (when (re-find #"^view-" (.-id rect))
+        (set! (-> rect .-style .-visibility) "hidden")))
 
     (events/listen svg "click"
-      #(alter-step (if (< 512 (.clientX %)) inc dec)))
+      #(alter-step (if (< 512 (.-clientX %)) inc dec)))
 
     (events/listen
-      (events/KeyHandler. svg true) KeyHandler/EventType.KEY
+      (KeyHandler. svg true) (-> KeyHandler
+                                 (.-EventType)
+                                 (.-KEY))
       (fn [e]
-        (condp = (.keyCode e)
-          events/KeyCodes.SPACE (alter-step inc)
-          events/KeyCodes.RIGHT (alter-step inc)
-          events/KeyCodes.LEFT  (alter-step dec)
+        (condp = (.-key e)
+          k/SPACE (alter-step inc)
+          k/RIGHT (alter-step inc)
+          k/LEFT  (alter-step dec)
           nil)))))
-
