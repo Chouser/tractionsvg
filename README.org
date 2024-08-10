@@ -33,7 +33,7 @@ I can add or change visual elements of a single diagram and therefore
 hopefully introduce less mental discontinuity in audience members.
 
 You can take a look at how I used it at Clojure/conj 2011 here:
-http://chouser.github.com/conj-2011-cljs.svg
+https://chouser.us/conj-2011-cljs.svg
 
 —Chouser, Dec 2011
 
