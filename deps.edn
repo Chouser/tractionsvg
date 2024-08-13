@@ -1,4 +1,4 @@
-{:paths ["src"]
+{:paths ["src" "example"]
  :aliases
  {:dev      {:extra-deps  {com.bhauman/figwheel-main {:mvn/version "0.2.18"}
                            org.slf4j/slf4j-nop       {:mvn/version "2.0.6"}

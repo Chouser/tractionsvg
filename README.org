@@ -185,13 +185,13 @@ Your `.svg` may now look something like this:
         <step>...</step>
         ...
       </steps>
-      <script xlink:href="traction-0.0.1.js" type="text/ecmascript">
+      <script xlink:href="traction.js" type="text/ecmascript">
       <defs>...</defs>
       ...
     </svg>
 
 It may look different later if you load the `.svg` file in inkscape
-and save it back out.  Inkspace may adjust where XML namespaces are
+and save it back out.  Inkscape may adjust where XML namespaces are
 declared and such, but this shouldn't cause any problems for TractionSVG.
    
 ** Moving `.js` into the `.svg`
