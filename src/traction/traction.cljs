@@ -28,24 +28,15 @@
   (let [diff (- end start)]
     (fn [t] (+ start (* t diff)))))
 
-(defn svg-point [x y]
-  (let [point (.createSVGPoint svg)]
-    (set! (.-x point) x)
-    (set! (.-y point) y)
-    point))
-
 (defn client-rect [elem]
-  (let [bbox (.getBBox elem)
-        ctm (.getCTM elem)
-        tl (.matrixTransform (svg-point (.-x bbox) (.-y bbox)) ctm)
-        br (.matrixTransform (svg-point (+ (.-x bbox) (.-width bbox))
-                                        (+ (.-y bbox) (.-height bbox)))
-                             ctm)]
-    {:x (.-x tl) :y (.-y tl)
-     :width (- (.-x br) (.-x tl)) :height (- (.-y br) (.-y tl))}))
+  (let [bb (.getBBox elem)]
+    {:x (.-x bb)
+     :y (.-y bb)
+     :width (.-width bb)
+     :height (.-height bb)}))
 
 (defn tags [elem tag-name]
-      ; (dom/$$ tag-name nil elem) ?
+  ; (dom/$$ tag-name nil elem) ?
   (prim-seq (.getElementsByTagName elem tag-name) 0))
 
 (defn elem-style [sets]
@@ -68,7 +59,7 @@
         (let [view-rect (if-let [view-id (.getAttribute step "view")]
                           (client-rect
                             (or (dom/getElement view-id)
-                                (js/alert (str "Couldn't find view "view-id))))
+                                (js/alert (str "Couldn't find view " view-id))))
                           (or (:view default)
                               (js/alert "First step requires a view attr")))
               comp-step (-> (into default (elem-style (tags step "set")))
@@ -209,7 +200,7 @@
             (apply-world @world)
             #_(open-notes config))
           (catch js/Error e
-            (js/alert (str e \newline (.-stack e)))))))
+            (js/alert (str "Config not loaded: " e))))))
 
     ; Hide view boxes
     (doseq [rect (prim-seq (.getElementsByTagName svg "rect") 0)]
