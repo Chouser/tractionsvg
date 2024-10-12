@@ -20,7 +20,8 @@
             [goog.fx]
             [goog.fx.anim :as anim]
             [goog.events :as events]
-            [goog.events.Keys :as k]))
+            [goog.events.Keys :as k]
+            [traction.explore :as explore]))
 
 (def svg js/document.documentElement)
 
@@ -47,7 +48,7 @@
                 (if (dom/getElement id)
                   (update-in out [id] assoc :opacity
                              (js/parseFloat (.getAttribute elem "opacity")))
-                  (js/alert (str "Couldn't find elem " id ))))))
+                  (println "Couldn't find elem" id)))))
           {} sets))
 
 (defn compute-steps [config-dom]
@@ -59,9 +60,9 @@
         (let [view-rect (if-let [view-id (.getAttribute step "view")]
                           (client-rect
                             (or (dom/getElement view-id)
-                                (js/alert (str "Couldn't find view " view-id))))
+                                (println "Couldn't find view" view-id)))
                           (or (:view default)
-                              (js/alert "First step requires a view attr")))
+                              (println "First step requires a view attr")))
               comp-step (-> (into default (elem-style (tags step "set")))
                             (assoc :view view-rect))
               new-default (assoc (->> (tags step "set")
@@ -194,7 +195,7 @@
                          (.-documentElement xml)
                          (if-let [elems (.getElementsByTagName svg "steps")]
                             (aget elems 0)
-                            (js/alert "No traction steps found")))]
+                            (println "No traction steps found")))]
             (reset! computed-steps (compute-steps config))
             (reset! world (nth @computed-steps 0))
             (apply-world @world)
@@ -207,8 +208,12 @@
       (when (re-find #"^view-" (.-id rect))
         (set! (-> rect .-style .-visibility) "hidden")))
 
-    (events/listen svg "click"
-      #(alter-step (if (< 512 (.-clientX %)) inc dec)))
+    (comment
+      "if you prefer to click through..."
+      (events/listen svg "click"
+                     #(alter-step (if (< 512 (.-clientX %)) inc dec))))
+
+    (explore/listen svg)
 
     (events/listen
       (KeyHandler. svg true) (-> KeyHandler
