@@ -82,7 +82,7 @@
                                       (remove #(.getAttribute % "once"))
                                       elem-style
                                       (into default))
-                            :view view-rect)]
+                                 :view view-rect)]
           (recur
             (conj rtn comp-step)
             new-default
