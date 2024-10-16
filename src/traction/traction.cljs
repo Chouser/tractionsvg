@@ -29,12 +29,25 @@
   (let [diff (- end start)]
     (fn [t] (+ start (* t diff)))))
 
-(defn client-rect [elem]
-  (let [bb (.getBBox elem)]
-    {:x (.-x bb)
-     :y (.-y bb)
-     :width (.-width bb)
-     :height (.-height bb)}))
+(defn pt*m [x y m]
+  (-> (new js/DOMPoint x y)
+      (.matrixTransform m)))
+
+(defn step-viewbox [view]
+  (let [bbt (.getBBox view)
+        bbx (.-x bbt)
+        bby (.-y bbt)
+        bbw (.-width bbt)
+        bbh (.-height bbt)
+        bbm (-> (.getCTM svg)
+                (.inverse)
+                (.multiply (.getCTM view)))
+        top-left (pt*m bbx bby bbm)
+        bottom-right (pt*m (+ bbx bbw) (+ bby bbh) bbm)]
+    {:x      (.-x top-left)
+     :y      (.-y top-left)
+     :width  (- (.-x bottom-right) (.-x top-left))
+     :height (- (.-y bottom-right) (.-y top-left))}))
 
 (defn tags [elem tag-name]
   ; (dom/$$ tag-name nil elem) ?
@@ -58,9 +71,9 @@
       (if-not step
         rtn
         (let [view-rect (if-let [view-id (.getAttribute step "view")]
-                          (client-rect
-                            (or (dom/getElement view-id)
-                                (println "Couldn't find view" view-id)))
+                          (or (some-> (dom/getElement view-id)
+                                      (step-viewbox))
+                              (println "Couldn't find view" view-id))
                           (or (:view default)
                               (println "First step requires a view attr")))
               comp-step (-> (into default (elem-style (tags step "set")))
@@ -69,7 +82,7 @@
                                       (remove #(.getAttribute % "once"))
                                       elem-style
                                       (into default))
-                                 :view view-rect)]
+                            :view view-rect)]
           (recur
             (conj rtn comp-step)
             new-default
@@ -120,10 +133,10 @@
 (defn alter-step [f]
   (let [i (swap! step limit-step @computed-steps f)
         current-world @world
-        target-world (nth @computed-steps i)]
+        target-world (nth @computed-steps i)
+        id (str "step" i)]
     (when (not= current-world target-world)
-      ; update main window
-      (set! js/document.location.hash (str \# (pr-str {'step i})))
+      (set! js/document.location.hash (str \# id))
       (reset! transition
               (with-meta
                 (new-transition current-world target-world)
@@ -132,8 +145,7 @@
 
       ; update notes window
       (when @notes-window
-        (let [id (str "step" i)
-              notes-body (.-body (.-document @notes-window))
+        (let [notes-body (.-body (.-document @notes-window))
               notes-dom (dom/getDomHelper notes-body)]
           (set! (.-scrollTop notes-body)
                 (style/getPageOffsetTop (.getElement notes-dom id))))))))
