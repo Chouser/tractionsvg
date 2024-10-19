@@ -225,6 +225,9 @@
       (events/listen svg "click"
                      #(alter-step (if (< 512 (.-clientX %)) inc dec))))
 
+    (when-let [[_ step] (re-find #"^#step(\d+)" js/document.location.hash)]
+      (js/setTimeout #(set-step (js/parseInt step)) 100))
+
     (explore/listen svg)
 
     (events/listen
